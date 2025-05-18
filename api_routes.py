@@ -12,7 +12,7 @@ import asyncio
 import threading
 
 from api_security import require_api_token, require_admin_role
-from utils import load_json, save_json, log_error, get_instance_id
+from utils import load_json, save_json, log_error, log_info, get_instance_id
 from websocket_manager import get_websocket_manager
 from config import DOWNLOADS_DIR
 
@@ -62,12 +62,9 @@ def run_authentication(nickname, phone, auth_id):
                 'message': 'In attesa del codice di verifica'
             })
         
-        # Definisci la funzione per il codice
-        code_callback = None
-        
-        # Inizia il processo di autenticazione
-        async def start_client():
-            nonlocal code_callback
+        # Definisci la funzione per l'autenticazione asincrona
+        async def async_auth_process():
+            nonlocal client
             
             # Avvia il client con callback per il telefono
             await client.connect()
@@ -150,15 +147,20 @@ def run_authentication(nickname, phone, auth_id):
                 pending_authentications[auth_id]['status'] = 'already_authenticated'
             
             return True
-        
-        # Esegui il client in un nuovo loop asyncio
+            
+        # Crea un nuovo loop di eventi asyncio per questo thread
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        success = loop.run_until_complete(start_client())
-        loop.close()
         
-        # Disconnetti
-        client.disconnect()
+        # Esegui la funzione asincrona nel loop
+        success = loop.run_until_complete(async_auth_process())
+        
+        # Assicurati che il client sia disconnesso
+        if client.is_connected():
+            loop.run_until_complete(client.disconnect())
+        
+        # Chiudi il loop
+        loop.close()
         
         # Se autenticato con successo, salva l'utente
         if pending_authentications[auth_id]['status'] in ['authenticated', 'already_authenticated']:
@@ -1013,24 +1015,45 @@ def debug_check_token():
 
 def register_api_routes(app):
     """Registra tutte le route API nell'app Flask"""
-    # Prima di registrare il blueprint, stampa le sue route
-    print("\nRoute nel blueprint prima della registrazione:")
-    for func in api_bp.deferred_functions:
-        print(f"  {func}")
+    try:
+        # Prima di registrare il blueprint, stampa le sue route
+        print("\nRoute nel blueprint prima della registrazione:")
+        for func in api_bp.deferred_functions:
+            print(f"  {func}")
+        
+        # Registra il blueprint
+        app.register_blueprint(api_bp)
+        
+        # Stampa le route dopo la registrazione
+        print("\nRoute nell'app dopo la registrazione del blueprint:")
+        for rule in app.url_map.iter_rules():
+            if rule.endpoint.startswith('api.'):
+                print(f"  {rule}")
+        
+        # Log dell'inizializzazione
+        try:
+            # Prima verifica se log_info è disponibile
+            from utils import log_info
+            log_info("API Blueprint registrato con successo", "api_server.log")
+        except (ImportError, NameError):
+            # Versione di fallback se log_info non è disponibile
+            try:
+                import os
+                import time
+                from config import DOWNLOADS_DIR
+                log_file = os.path.join(DOWNLOADS_DIR, "api_server.log")
+                os.makedirs(os.path.dirname(log_file) if os.path.dirname(log_file) else '.', exist_ok=True)
+                with open(log_file, 'a', encoding='utf-8') as f:
+                    f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] API Blueprint registrato con successo\n")
+                print(f"INFO: API Blueprint registrato con successo")
+            except Exception as e:
+                print(f"Impossibile scrivere nel file di log: {e}")
+        
+        return True
     
-    # Registra il blueprint
-    app.register_blueprint(api_bp)
-    
-    # Stampa le route dopo la registrazione
-    print("\nRoute nell'app dopo la registrazione del blueprint:")
-    for rule in app.url_map.iter_rules():
-        if rule.endpoint.startswith('api.'):
-            print(f"  {rule}")
-    
-    # Log dell'inizializzazione
-    log_info("API Blueprint registrato con successo", "api_server.log")
-    
-    return True
+    except Exception as e:
+        print(f"Errore durante la registrazione delle route API: {e}")
+        return False
 
 # # Funzione per registrare il blueprint nell'app Flask
 # def register_api_routes(app):

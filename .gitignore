@@ -1,5 +1,6 @@
 .env
-.env
 __pycache__
 api_tokens.json
 phone_numbers.json
+*.session
+*.log

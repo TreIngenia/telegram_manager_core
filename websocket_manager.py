@@ -236,9 +236,13 @@ class WebSocketManager:
         """
         Configura i gestori di eventi Socket.IO di base
         """
-        @self.socketio.on('connect')
+        socketio = self.socketio
+        
+        @socketio.on('connect')
         def handle_connect():
-            client_id = self.socketio.request.sid
+            # In Flask-SocketIO, l'ID del client è disponibile tramite request.sid
+            from flask import request
+            client_id = request.sid
             self.register_client(client_id)
             
             # Invia subito le sessioni attive al client appena connesso
@@ -247,14 +251,16 @@ class WebSocketManager:
                 'sessions': active_sessions
             })
         
-        @self.socketio.on('disconnect')
+        @socketio.on('disconnect')
         def handle_disconnect():
-            client_id = self.socketio.request.sid
+            from flask import request
+            client_id = request.sid
             self.unregister_client(client_id)
         
-        @self.socketio.on('client_ping')
+        @socketio.on('client_ping')
         def handle_ping(data):
-            client_id = self.socketio.request.sid
+            from flask import request
+            client_id = request.sid
             self.update_client_activity(client_id)
             # Rispondi con un pong
             self.send_to_client(client_id, 'server_pong', {
@@ -262,9 +268,10 @@ class WebSocketManager:
                 'received_data': data
             })
         
-        @self.socketio.on('request_active_sessions')
+        @socketio.on('request_active_sessions')
         def handle_request_active_sessions(data):
-            client_id = self.socketio.request.sid
+            from flask import request
+            client_id = request.sid
             session_type = data.get('type') if data else None
             active_sessions = self.get_active_sessions(session_type)
             
@@ -273,9 +280,10 @@ class WebSocketManager:
                 'requested_type': session_type
             })
             
-        @self.socketio.on('auth_status_request')
+        @socketio.on('auth_status_request')
         def handle_auth_status_request(data):
-            client_id = self.socketio.request.sid
+            from flask import request
+            client_id = request.sid
             auth_id = data.get('auth_id')
             
             # Importa il dizionario delle autenticazioni in corso
