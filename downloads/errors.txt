@@ -1,0 +1,22 @@
+[2025-05-18 17:06:53] Errore durante la pulizia dei file di sessione session_test_user_monitor_1747580209-35664_1747580209_4321: [WinError 32] Impossibile accedere al file. Il file è utilizzato da un altro processo: 'session_test_user_monitor_1747580209-35664_1747580209_4321.session'
+[2025-05-18 17:06:58] Errore durante la pulizia dei file di sessione session_test_user_monitor_1747580813-35664_1747580813_4119: [WinError 32] Impossibile accedere al file. Il file è utilizzato da un altro processo: 'session_test_user_monitor_1747580813-35664_1747580813_4119.session'
+[2025-05-18 17:20:16] Errore nel client test_user (ID: 2177583774160): 
+[2025-05-18 17:21:35] File di sessione in uso, attendo e riprovo (1/3): [WinError 32] Impossibile accedere al file. Il file è utilizzato da un altro processo: 'session_test_user_monitor_1747581689-55184_1747581689_7927.session'
+[2025-05-18 17:21:37] File di sessione in uso, attendo e riprovo (2/3): [WinError 32] Impossibile accedere al file. Il file è utilizzato da un altro processo: 'session_test_user_monitor_1747581689-55184_1747581689_7927.session'
+[2025-05-18 17:21:41] Impossibile eliminare il file di sessione dopo 3 tentativi: [WinError 32] Impossibile accedere al file. Il file è utilizzato da un altro processo: 'session_test_user_monitor_1747581689-55184_1747581689_7927.session'
+[2025-05-18 17:24:38] Errore nel client test_user (ID: 1685495668624): 
+[2025-05-18 17:25:26] File di sessione in uso, attendo e riprovo (1/3): [WinError 32] Impossibile accedere al file. Il file è utilizzato da un altro processo: 'session_test_user_monitor_1747581920-37068_1747581920_6315.session'
+[2025-05-18 17:25:28] File di sessione in uso, attendo e riprovo (2/3): [WinError 32] Impossibile accedere al file. Il file è utilizzato da un altro processo: 'session_test_user_monitor_1747581920-37068_1747581920_6315.session'
+[2025-05-18 17:25:32] Impossibile eliminare il file di sessione dopo 3 tentativi: [WinError 32] Impossibile accedere al file. Il file è utilizzato da un altro processo: 'session_test_user_monitor_1747581920-37068_1747581920_6315.session'
+[2025-05-18 17:26:22] Errore nel client test_user (ID: 2567188314256): 
+[2025-05-18 17:51:28] Unhandled exception: 405 Method Not Allowed: The method is not allowed for the requested URL.
+[2025-05-18 17:53:08] Unhandled exception: 405 Method Not Allowed: The method is not allowed for the requested URL.
+[2025-05-18 17:55:20] Unhandled exception: 405 Method Not Allowed: The method is not allowed for the requested URL.
+[2025-05-18 17:56:41] Unhandled exception: 405 Method Not Allowed: The method is not allowed for the requested URL.
+[2025-05-18 17:56:52] Unhandled exception: 405 Method Not Allowed: The method is not allowed for the requested URL.
+[2025-05-18 17:58:29] Unhandled exception: 405 Method Not Allowed: The method is not allowed for the requested URL.
+[2025-05-18 18:08:58] Unhandled exception: 405 Method Not Allowed: The method is not allowed for the requested URL.
+[2025-05-18 18:15:21] Unhandled exception: 405 Method Not Allowed: The method is not allowed for the requested URL.
+[2025-05-18 19:20:01] Errore durante l'avvio dell'API Server: name 'log_info' is not defined
+[2025-05-18 19:24:21] Errore durante l'inizializzazione del server API: name 'log_info' is not defined
+[2025-05-18 19:24:21] Errore durante l'avvio dell'API Server: name 'log_info' is not defined
