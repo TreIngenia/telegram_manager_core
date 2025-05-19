@@ -35,6 +35,7 @@ def run_authentication(nickname, phone, auth_id):
     """Esegue l'autenticazione in un thread separato e invia aggiornamenti via WebSocket"""
     from telethon import TelegramClient, errors
     from config import API_ID, API_HASH, PHONE_NUMBERS_FILE
+    import nest_asyncio  # Se questa importazione fallisce, installa con: pip install nest_asyncio
     
     # Ottieni il gestore WebSocket
     socketio_manager = get_websocket_manager()
@@ -50,9 +51,6 @@ def run_authentication(nickname, phone, auth_id):
     }
     
     try:
-        # Crea un client Telegram
-        client = TelegramClient(f'session_{nickname}', API_ID, API_HASH)
-        
         # Invia l'aggiornamento di stato
         if socketio_manager:
             socketio_manager.broadcast_event('auth_status', {
@@ -62,112 +60,113 @@ def run_authentication(nickname, phone, auth_id):
                 'message': 'In attesa del codice di verifica'
             })
         
-        # Crea un nuovo loop di eventi asyncio per questo thread
+        # Crea un nuovo loop di eventi
         loop = asyncio.new_event_loop()
+        
+        # Importante: imposta il loop come loop corrente per questo thread
         asyncio.set_event_loop(loop)
         
-        # Definisci la funzione per l'autenticazione asincrona
-        async def async_auth_process():
-            try:
-                # Avvia il client con callback per il telefono
-                await client.connect()
-                
-                # Se non siamo già autorizzati, richiedi il codice
-                if not await client.is_user_authorized():
-                    # Invia il codice di verifica
-                    sent_code = await client.send_code_request(phone)
-                    
-                    # Aggiorna lo stato
-                    if socketio_manager:
-                        socketio_manager.broadcast_event('auth_status', {
-                            'auth_id': auth_id,
-                            'status': 'code_sent',
-                            'nickname': nickname,
-                            'phone_code_hash': sent_code.phone_code_hash,
-                            'message': 'Codice di verifica inviato al telefono'
-                        })
-                    
-                    pending_authentications[auth_id]['status'] = 'code_sent'
-                    pending_authentications[auth_id]['phone_code_hash'] = sent_code.phone_code_hash
-                    
-                    # Attendiamo che il codice venga inserito tramite l'API
-                    timeout = 300  # 5 minuti di timeout
-                    start_time = time.time()
-                    
-                    while not pending_authentications[auth_id]['code_received']:
-                        # Timeout
-                        if time.time() - start_time > timeout:
-                            if socketio_manager:
-                                socketio_manager.broadcast_event('auth_status', {
-                                    'auth_id': auth_id,
-                                    'status': 'timeout',
-                                    'message': 'Timeout durante l\'attesa del codice di verifica'
-                                })
-                            
-                            pending_authentications[auth_id]['status'] = 'timeout'
-                            return False
-                        
-                        await asyncio.sleep(1)
-                    
-                    # Ottieni il codice
-                    code = pending_authentications[auth_id]['code']
-                    
-                    # Invia l'aggiornamento di stato
-                    if socketio_manager:
-                        socketio_manager.broadcast_event('auth_status', {
-                            'auth_id': auth_id,
-                            'status': 'verifying_code',
-                            'message': 'Verifica del codice in corso'
-                        })
-                    
-                    # Aggiorna lo stato
-                    pending_authentications[auth_id]['status'] = 'verifying_code'
-                    
-                    # Log di debug
-                    print(f"[DEBUG] Tentativo di sign_in per {nickname} con codice: {code}")
-                    print(f"[DEBUG] phone_code_hash: {sent_code.phone_code_hash}")
-                    
-                    # Completa l'autenticazione con il codice
-                    try:
-                        # Qui è dove potrebbe verificarsi l'errore
-                        await client.sign_in(phone, code, phone_code_hash=sent_code.phone_code_hash)
-                        print(f"[DEBUG] sign_in completato con successo per {nickname}")
-                        pending_authentications[auth_id]['status'] = 'authenticated'
-                    except errors.SessionPasswordNeededError:
-                        # Gestione autenticazione 2FA
-                        if socketio_manager:
-                            socketio_manager.broadcast_event('auth_status', {
-                                'auth_id': auth_id,
-                                'status': 'password_required',
-                                'message': 'È richiesta la password di autenticazione a due fattori'
-                            })
-                        
-                        pending_authentications[auth_id]['status'] = 'password_required'
-                        return False
-                else:
-                    # Già autenticato
-                    if socketio_manager:
-                        socketio_manager.broadcast_event('auth_status', {
-                            'auth_id': auth_id,
-                            'status': 'already_authenticated',
-                            'message': 'Utente già autenticato'
-                        })
-                    
-                    pending_authentications[auth_id]['status'] = 'already_authenticated'
-                
-                return True
-            finally:
-                # Assicurati che il client sia disconnesso
-                if client.is_connected():
-                    await client.disconnect()
+        # Patch del loop per supportare operazioni nidificate
+        nest_asyncio.apply(loop)
         
-        # Esegui la funzione asincrona nel loop
-        success = loop.run_until_complete(async_auth_process())
+        # Ora esegui le operazioni di autenticazione
+        client = TelegramClient(f'session_{nickname}', API_ID, API_HASH)
+        
+        # Connetti il client
+        loop.run_until_complete(client.connect())
+        
+        # Verifica se l'utente è già autorizzato
+        is_authorized = loop.run_until_complete(client.is_user_authorized())
+        
+        if not is_authorized:
+            # Invia il codice di verifica
+            sent_code = loop.run_until_complete(client.send_code_request(phone))
+            
+            # Aggiorna lo stato
+            if socketio_manager:
+                socketio_manager.broadcast_event('auth_status', {
+                    'auth_id': auth_id,
+                    'status': 'code_sent',
+                    'nickname': nickname,
+                    'phone_code_hash': sent_code.phone_code_hash,
+                    'message': 'Codice di verifica inviato al telefono'
+                })
+            
+            pending_authentications[auth_id]['status'] = 'code_sent'
+            pending_authentications[auth_id]['phone_code_hash'] = sent_code.phone_code_hash
+            
+            # Attendiamo che il codice venga inserito tramite l'API
+            timeout = 300  # 5 minuti di timeout
+            start_time = time.time()
+            
+            while not pending_authentications[auth_id]['code_received']:
+                # Timeout
+                if time.time() - start_time > timeout:
+                    if socketio_manager:
+                        socketio_manager.broadcast_event('auth_status', {
+                            'auth_id': auth_id,
+                            'status': 'timeout',
+                            'message': 'Timeout durante l\'attesa del codice di verifica'
+                        })
+                    
+                    pending_authentications[auth_id]['status'] = 'timeout'
+                    if client.is_connected():
+                        loop.run_until_complete(client.disconnect())
+                    loop.close()
+                    return False
+                
+                # Breve attesa - usa sleep sincrono perché siamo in un thread separato
+                time.sleep(1)
+            
+            # Ottieni il codice
+            code = pending_authentications[auth_id]['code']
+            
+            # Invia l'aggiornamento di stato
+            if socketio_manager:
+                socketio_manager.broadcast_event('auth_status', {
+                    'auth_id': auth_id,
+                    'status': 'verifying_code',
+                    'message': 'Verifica del codice in corso'
+                })
+            
+            # Aggiorna lo stato
+            pending_authentications[auth_id]['status'] = 'verifying_code'
+            
+            # Completa l'autenticazione con il codice
+            try:
+                loop.run_until_complete(client.sign_in(phone, code, phone_code_hash=sent_code.phone_code_hash))
+                pending_authentications[auth_id]['status'] = 'authenticated'
+            except errors.SessionPasswordNeededError:
+                # Gestione autenticazione 2FA
+                if socketio_manager:
+                    socketio_manager.broadcast_event('auth_status', {
+                        'auth_id': auth_id,
+                        'status': 'password_required',
+                        'message': 'È richiesta la password di autenticazione a due fattori'
+                    })
+                
+                pending_authentications[auth_id]['status'] = 'password_required'
+                if client.is_connected():
+                    loop.run_until_complete(client.disconnect())
+                loop.close()
+                return False
+        else:
+            # Già autenticato
+            if socketio_manager:
+                socketio_manager.broadcast_event('auth_status', {
+                    'auth_id': auth_id,
+                    'status': 'already_authenticated',
+                    'message': 'Utente già autenticato'
+                })
+            
+            pending_authentications[auth_id]['status'] = 'already_authenticated'
+        
+        # Disconnetti il client
+        if client.is_connected():
+            loop.run_until_complete(client.disconnect())
         
         # Chiudi il loop
         loop.close()
-        
-        print(f"Autenticazione completata per {nickname}")
         
         # Se autenticato con successo, salva l'utente
         if pending_authentications[auth_id]['status'] in ['authenticated', 'already_authenticated']:
@@ -211,216 +210,6 @@ def run_authentication(nickname, phone, auth_id):
         cleanup_thread = threading.Thread(target=cleanup_auth)
         cleanup_thread.daemon = True
         cleanup_thread.start()
-        
-# def run_authentication(nickname, phone, auth_id):
-#     """Esegue l'autenticazione in un thread separato e invia aggiornamenti via WebSocket"""
-#     from telethon import TelegramClient, errors
-#     from config import API_ID, API_HASH, PHONE_NUMBERS_FILE
-#     import nest_asyncio  # Se questa importazione fallisce, installa con: pip install nest_asyncio
-    
-#     # Ottieni il gestore WebSocket
-#     socketio_manager = get_websocket_manager()
-    
-#     # Inizializza le informazioni di autenticazione
-#     pending_authentications[auth_id] = {
-#         'nickname': nickname,
-#         'phone': phone,
-#         'status': 'waiting_for_code',
-#         'code_received': False,
-#         'code': None,
-#         'error': None
-#     }
-    
-#     try:
-#         # Invia l'aggiornamento di stato
-#         if socketio_manager:
-#             socketio_manager.broadcast_event('auth_status', {
-#                 'auth_id': auth_id,
-#                 'status': 'waiting_for_code',
-#                 'nickname': nickname,
-#                 'message': 'In attesa del codice di verifica'
-#             })
-        
-#         # Crea un nuovo loop di eventi
-#         loop = asyncio.new_event_loop()
-        
-#         # Importante: imposta il loop come loop corrente per questo thread
-#         asyncio.set_event_loop(loop)
-        
-#         # Patch del loop per supportare operazioni nidificate
-#         nest_asyncio.apply(loop)
-        
-#         # Ora esegui le operazioni di autenticazione
-#         client = TelegramClient(f'session_{nickname}', API_ID, API_HASH)
-        
-#         # Connetti il client
-#         loop.run_until_complete(client.connect())
-        
-#         # Verifica se l'utente è già autorizzato
-#         is_authorized = loop.run_until_complete(client.is_user_authorized())
-        
-#         if not is_authorized:
-#             # Invia il codice di verifica
-#             sent_code = loop.run_until_complete(client.send_code_request(phone))
-            
-#             # Aggiorna lo stato
-#             if socketio_manager:
-#                 socketio_manager.broadcast_event('auth_status', {
-#                     'auth_id': auth_id,
-#                     'status': 'code_sent',
-#                     'nickname': nickname,
-#                     'phone_code_hash': sent_code.phone_code_hash,
-#                     'message': 'Codice di verifica inviato al telefono'
-#                 })
-            
-#             pending_authentications[auth_id]['status'] = 'code_sent'
-#             pending_authentications[auth_id]['phone_code_hash'] = sent_code.phone_code_hash
-            
-#             # Attendiamo che il codice venga inserito tramite l'API
-#             timeout = 300  # 5 minuti di timeout
-#             start_time = time.time()
-            
-#             while not pending_authentications[auth_id]['code_received']:
-#                 # Timeout
-#                 if time.time() - start_time > timeout:
-#                     if socketio_manager:
-#                         socketio_manager.broadcast_event('auth_status', {
-#                             'auth_id': auth_id,
-#                             'status': 'timeout',
-#                             'message': 'Timeout durante l\'attesa del codice di verifica'
-#                         })
-                    
-#                     pending_authentications[auth_id]['status'] = 'timeout'
-#                     if client.is_connected():
-#                         loop.run_until_complete(client.disconnect())
-#                     loop.close()
-#                     return False
-                
-#                 # Breve attesa - usa sleep sincrono perché siamo in un thread separato
-#                 time.sleep(1)
-            
-#             # Ottieni il codice
-#             code = pending_authentications[auth_id]['code']
-            
-#             # Invia l'aggiornamento di stato
-#             if socketio_manager:
-#                 socketio_manager.broadcast_event('auth_status', {
-#                     'auth_id': auth_id,
-#                     'status': 'verifying_code',
-#                     'message': 'Verifica del codice in corso'
-#                 })
-            
-#             # Aggiorna lo stato
-#             pending_authentications[auth_id]['status'] = 'verifying_code'
-            
-#             # Completa l'autenticazione con il codice
-#             try:
-#                 # Importante: Assicurati che client.sign_in ritorni un awaitable
-#                 sign_in_coroutine = client.sign_in(phone, code, phone_code_hash=sent_code.phone_code_hash)
-#                 # Usa run_until_complete su questa coroutine
-#                 loop.run_until_complete(sign_in_coroutine)
-                
-#                 # Se arriviamo qui, l'autenticazione è avvenuta con successo
-#                 pending_authentications[auth_id]['status'] = 'authenticated'
-                
-#                 # Invia notifica di successo
-#                 if socketio_manager:
-#                     socketio_manager.broadcast_event('auth_status', {
-#                         'auth_id': auth_id,
-#                         'status': 'authenticated',
-#                         'message': 'Autenticazione completata con successo'
-#                     })
-                
-#                 # Debug
-#                 print(f"Autenticazione completata per {nickname}")
-                
-#             except errors.SessionPasswordNeededError:
-#                 # Gestione autenticazione 2FA
-#                 if socketio_manager:
-#                     socketio_manager.broadcast_event('auth_status', {
-#                         'auth_id': auth_id,
-#                         'status': 'password_required',
-#                         'message': 'È richiesta la password di autenticazione a due fattori'
-#                     })
-                
-#                 pending_authentications[auth_id]['status'] = 'password_required'
-#             # try:
-#             #     loop.run_until_complete(client.sign_in(phone, code, phone_code_hash=sent_code.phone_code_hash))
-#             #     pending_authentications[auth_id]['status'] = 'authenticated'
-#             # except errors.SessionPasswordNeededError:
-#             #     # Gestione autenticazione 2FA
-#             #     if socketio_manager:
-#             #         socketio_manager.broadcast_event('auth_status', {
-#             #             'auth_id': auth_id,
-#             #             'status': 'password_required',
-#             #             'message': 'È richiesta la password di autenticazione a due fattori'
-#             #         })
-                
-#             #     pending_authentications[auth_id]['status'] = 'password_required'
-#             #     if client.is_connected():
-#             #         loop.run_until_complete(client.disconnect())
-#             #     loop.close()
-#             #     return False
-#         else:
-#             # Già autenticato
-#             if socketio_manager:
-#                 socketio_manager.broadcast_event('auth_status', {
-#                     'auth_id': auth_id,
-#                     'status': 'already_authenticated',
-#                     'message': 'Utente già autenticato'
-#                 })
-            
-#             pending_authentications[auth_id]['status'] = 'already_authenticated'
-        
-#         # Disconnetti il client
-#         if client.is_connected():
-#             loop.run_until_complete(client.disconnect())
-        
-#         # Chiudi il loop
-#         loop.close()
-        
-#         # Se autenticato con successo, salva l'utente
-#         if pending_authentications[auth_id]['status'] in ['authenticated', 'already_authenticated']:
-#             # Invia l'aggiornamento di stato
-#             if socketio_manager:
-#                 socketio_manager.broadcast_event('auth_status', {
-#                     'auth_id': auth_id,
-#                     'status': pending_authentications[auth_id]['status'],
-#                     'message': 'Autenticazione completata con successo'
-#                 })
-            
-#             # Salva l'utente nel file degli utenti
-#             phone_numbers = load_json(PHONE_NUMBERS_FILE)
-#             phone_numbers[nickname] = phone
-#             save_json(PHONE_NUMBERS_FILE, phone_numbers)
-        
-#     except Exception as e:
-#         error_msg = str(e)
-#         log_error(f"Errore durante l'autenticazione di {nickname}: {error_msg}")
-        
-#         # Invia l'aggiornamento di stato
-#         if socketio_manager:
-#             socketio_manager.broadcast_event('auth_status', {
-#                 'auth_id': auth_id,
-#                 'status': 'error',
-#                 'error': error_msg,
-#                 'message': 'Errore durante l\'autenticazione'
-#             })
-        
-#         # Aggiorna lo stato
-#         pending_authentications[auth_id]['status'] = 'error'
-#         pending_authentications[auth_id]['error'] = error_msg
-    
-#     finally:
-#         # Rimuovi l'autenticazione dopo un po' di tempo
-#         def cleanup_auth():
-#             time.sleep(600)  # 10 minuti
-#             if auth_id in pending_authentications:
-#                 del pending_authentications[auth_id]
-        
-#         cleanup_thread = threading.Thread(target=cleanup_auth)
-#         cleanup_thread.daemon = True
-#         cleanup_thread.start()
 
 @api_bp.route('/users/authenticate', methods=['POST'])
 @require_api_token
@@ -1299,9 +1088,9 @@ def register_api_routes(app):
     """Registra tutte le route API nell'app Flask"""
     try:
         # Prima di registrare il blueprint, stampa le sue route
-        print("\nRoute nel blueprint prima della registrazione:")
-        for func in api_bp.deferred_functions:
-            print(f"  {func}")
+        # print("\nRoute nel blueprint prima della registrazione:")
+        # for func in api_bp.deferred_functions:
+        #     print(f"  {func}")
         
         # Registra il blueprint
         app.register_blueprint(api_bp)

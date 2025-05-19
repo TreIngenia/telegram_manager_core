@@ -59,3 +59,5 @@
 [2025-05-19 14:54:00] Errore durante l'autenticazione di MrKlaus: An asyncio.Future, a coroutine or an awaitable is required
 [2025-05-19 15:22:29] Errore durante l'autenticazione di MrKlaus: An asyncio.Future, a coroutine or an awaitable is required
 [2025-05-19 15:27:45] Errore durante l'autenticazione di Treingenia: There is no current event loop in thread 'Thread-1 (run_authentication)'.
+[2025-05-19 15:37:42] Errore durante l'autenticazione di Treingenia: There is no current event loop in thread 'Thread-1 (run_authentication)'.
+[2025-05-19 15:42:23] Errore durante l'autenticazione di TEST: An asyncio.Future, a coroutine or an awaitable is required
