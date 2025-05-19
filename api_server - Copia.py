@@ -685,9 +685,9 @@ def run_api_server(host='0.0.0.0', port=5000, debug=False):
     load_api_tokens()
 
     # Stampa tutte le route disponibili
-    print("\nRoute disponibili:")
-    for rule in app.url_map.iter_rules():
-        print(f"{rule} [{', '.join(rule.methods)}]")
+    # print("\nRoute disponibili:")
+    # for rule in app.url_map.iter_rules():
+    #     print(f"{rule} [{', '.join(rule.methods)}]")
 
     # Carica i token API
     

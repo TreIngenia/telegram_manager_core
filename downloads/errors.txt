@@ -37,3 +37,25 @@
 [2025-05-18 21:34:39] Errore durante l'autenticazione di Test: There is no current event loop in thread 'Thread-1 (run_authentication)'.
 [2025-05-18 21:34:50] Errore durante l'autenticazione di Test: There is no current event loop in thread 'Thread-3 (run_authentication)'.
 [2025-05-18 21:34:52] Errore durante l'autenticazione di Test: There is no current event loop in thread 'Thread-5 (run_authentication)'.
+[2025-05-18 21:41:47] Errore durante l'autenticazione di Test: There is no current event loop in thread 'Thread-1 (run_authentication)'.
+[2025-05-18 21:45:54] Errore durante l'autenticazione di TEST: There is no current event loop in thread 'Thread-3 (run_authentication)'.
+[2025-05-18 21:46:04] Errore durante l'autenticazione di TEST: There is no current event loop in thread 'Thread-5 (run_authentication)'.
+[2025-05-18 21:48:12] Errore durante l'autenticazione di TEST: There is no current event loop in thread 'Thread-1 (run_authentication)'.
+[2025-05-18 21:48:41] Errore durante l'autenticazione di TEST: There is no current event loop in thread 'Thread-1 (run_authentication)'.
+[2025-05-18 21:49:17] Errore durante l'autenticazione di TEST: There is no current event loop in thread 'Thread-1 (run_authentication)'.
+[2025-05-18 21:58:15] Errore durante l'autenticazione di TEST: An asyncio.Future, a coroutine or an awaitable is required
+[2025-05-18 21:58:43] Errore durante l'autenticazione di TST: An asyncio.Future, a coroutine or an awaitable is required
+[2025-05-18 22:01:09] Errore durante l'autenticazione di TEST: An asyncio.Future, a coroutine or an awaitable is required
+[2025-05-18 22:01:30] Errore durante l'autenticazione di TEST: An asyncio.Future, a coroutine or an awaitable is required
+[2025-05-18 22:05:35] Errore durante l'autenticazione di TEST: An asyncio.Future, a coroutine or an awaitable is required
+[2025-05-18 22:16:00] Errore durante l'autenticazione di MrKlaus: An asyncio.Future, a coroutine or an awaitable is required
+[2025-05-18 22:18:32] Errore durante l'autenticazione di MrKlaus: An asyncio.Future, a coroutine or an awaitable is required
+[2025-05-18 22:27:55] Errore durante l'autenticazione di TEST: The phone code entered was invalid (caused by SignInRequest)
+[2025-05-18 22:28:55] Errore durante l'autenticazione di TST: An asyncio.Future, a coroutine or an awaitable is required
+[2025-05-18 22:28:56] Errore durante l'autenticazione di TEST: An asyncio.Future, a coroutine or an awaitable is required
+[2025-05-19 00:11:38] Errore durante l'autenticazione di Test: An asyncio.Future, a coroutine or an awaitable is required
+[2025-05-19 00:11:38] Errore durante l'autenticazione di Test: An asyncio.Future, a coroutine or an awaitable is required
+[2025-05-19 00:11:38] Errore durante l'autenticazione di TEST: An asyncio.Future, a coroutine or an awaitable is required
+[2025-05-19 14:54:00] Errore durante l'autenticazione di MrKlaus: An asyncio.Future, a coroutine or an awaitable is required
+[2025-05-19 15:22:29] Errore durante l'autenticazione di MrKlaus: An asyncio.Future, a coroutine or an awaitable is required
+[2025-05-19 15:27:45] Errore durante l'autenticazione di Treingenia: There is no current event loop in thread 'Thread-1 (run_authentication)'.

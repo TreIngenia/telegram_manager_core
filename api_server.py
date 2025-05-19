@@ -158,14 +158,14 @@ def run_api_server(host='0.0.0.0', port=5000, debug=False):
         print(f"⚠️ Errore durante l'inizializzazione del server: {e}")
     
     # Stampa tutte le route disponibili
-    print("\nRoute disponibili:")
-    for rule in app.url_map.iter_rules():
-        print(f"{rule} [{', '.join(rule.methods)}]")
+    # print("\nRoute disponibili:")
+    # for rule in app.url_map.iter_rules():
+    #     print(f"{rule} [{', '.join(rule.methods)}]")
     
     # Avvia il server
     print(f"🚀 API Server in ascolto su {host}:{port}")
     socketio.run(app, host=host, port=port, debug=debug)
-    
+
 # def run_api_server(host='0.0.0.0', port=5000, debug=False):
 #     # Inizializza il sistema di sicurezza API
 #     from api_security import initialize_api_security

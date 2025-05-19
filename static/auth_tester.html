@@ -239,7 +239,7 @@
                     updateAuthStatus(data.message, data.status === 'error' ? 'error' : 'info');
                     
                     // Show code input if waiting for code
-                    if (data.status === 'waiting_for_code' || data.status === 'code_sent') {
+                    if (data.status === 'pending' || data.status === 'code_sent') {
                         document.getElementById('codeInputContainer').style.display = 'block';
                     } else if (data.status === 'authenticated' || data.status === 'already_authenticated') {
                         document.getElementById('codeInputContainer').style.display = 'none';
@@ -308,14 +308,20 @@
                 console.log('Response data:', data);
                 
                 setResponseData(data);
-                
+                console.log('Response:', data);
                 if (data.status === 'already_authenticated') {
                     updateAuthStatus('User is already authenticated!', 'success');
                     document.getElementById('codeInputContainer').style.display = 'none';
+                } else if (data.status === 'pending') {
+                    document.getElementById('codeInputContainer').style.display = 'block';
+                    currentAuthId = data.auth_id;
+                    updateAuthStatus(data.message);
                 } else if (data.auth_id) {
+                    document.getElementById('codeInputContainer').style.display = 'block';
                     currentAuthId = data.auth_id;
                     updateAuthStatus(data.message);
                 }
+                
             } catch (error) {
                 console.error('Authentication error:', error);
                 setResponseData(`Error: ${error.message}`);

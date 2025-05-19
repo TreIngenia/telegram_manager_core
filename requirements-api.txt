@@ -3,6 +3,7 @@ PyQt5
 asyncio
 emoji
 python-dotenv
+nest_asyncio
 flask>=2.0.0
 flask-cors>=3.0.10
 flask-socketio>=5.1.1
