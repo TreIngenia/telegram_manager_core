@@ -61,3 +61,13 @@
 [2025-05-19 15:27:45] Errore durante l'autenticazione di Treingenia: There is no current event loop in thread 'Thread-1 (run_authentication)'.
 [2025-05-19 15:37:42] Errore durante l'autenticazione di Treingenia: There is no current event loop in thread 'Thread-1 (run_authentication)'.
 [2025-05-19 15:42:23] Errore durante l'autenticazione di TEST: An asyncio.Future, a coroutine or an awaitable is required
+[2025-05-19 15:49:13] Errore durante l'autenticazione di TEST: There is no current event loop in thread 'Thread-1 (run_authentication)'.
+[2025-05-19 15:49:37] Errore durante l'autenticazione di TEST: There is no current event loop in thread 'Thread-3 (run_authentication)'.
+[2025-05-19 15:59:58] Errore durante l'autenticazione di TEST: There is no current event loop in thread 'Thread-1 (run_authentication)'.
+[2025-05-19 16:04:07] Errore durante l'autenticazione di TEST: There is no current event loop in thread 'Thread-1 (run_authentication)'.
+[2025-05-19 16:05:03] Errore durante l'autenticazione di TEST: A wait of 2856 seconds is required (caused by SendCodeRequest)
+[2025-05-19 16:05:42] Errore durante l'autenticazione di TEST: An asyncio.Future, a coroutine or an awaitable is required
+[2025-05-19 16:54:49] Errore durante l'avvio dell'API Server: 'SessionManager' object has no attribute 'handle_orphaned_sessions'
+[2025-05-19 17:00:56] Errore durante l'autenticazione di TEST: There is no current event loop in thread 'Thread-1 (run_authentication)'.
+[2025-05-19 17:03:21] Errore durante l'autenticazione di TEST: There is no current event loop in thread 'Thread-1 (run_authentication)'.
+[2025-05-19 17:06:15] Errore durante l'autenticazione di TEST: An asyncio.Future, a coroutine or an awaitable is required
